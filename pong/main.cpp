@@ -1,5 +1,4 @@
 #include <SDL.h>
-#include <SDL_image.h>
 #include <iostream>
 #include <algorithm>
 
@@ -7,6 +6,12 @@ constexpr int SCREEN_WIDTH{ 640 };
 constexpr int SCREEN_HEIGHT{ 480 };
 constexpr int PLAYER_WIDTH{ 20 };
 constexpr int PLAYER_HEIGHT{ 100 };
+constexpr int BALL_WIDTH{ 20 };
+constexpr int BALL_HEIGHT{ BALL_WIDTH };
+
+SDL_Surface* paddle_surface{ SDL_LoadBMP("img/paddle.bmp") };
+SDL_Surface* ball_surface{ SDL_LoadBMP("img/ball.bmp") };
+
 
 class Player
 {
@@ -15,8 +20,8 @@ class Player
 		const static int movespeed{ 10 }; // Movespeed
 
 		Player() : x(0), y(0), x_vel(0), y_vel(0) {}
-	
 		Player(int x, int y) : x(x), y(y), x_vel(0), y_vel(0) {}
+		Player(int x, int y, int x_vel, int y_vel) : x(x), y(y), x_vel(x_vel), y_vel(y_vel) {}
 	
 		int getX() { return x; }
 		int getY() { return y; }
@@ -42,6 +47,17 @@ class Player
 
 };
 
+class Ball : public Player {
+	public: 
+		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
+
+		void updatePlayerPosition() 
+		{
+			setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - BALL_WIDTH));
+			setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - BALL_HEIGHT));
+		}
+};
+
 
 
 
@@ -50,17 +66,29 @@ void renderPlayer (Player* player, SDL_Renderer* renderer)
 	//std::cout << "Rendering player at position: " << player->getX() << ", " << player->getY() << std::endl;
 
 	// Load the paddle image
-	SDL_Surface* paddleSurface = SDL_LoadBMP( "img/paddle.bmp" );
-	SDL_Texture* paddleTexture = SDL_CreateTextureFromSurface(renderer, paddleSurface);
-	SDL_FreeSurface(paddleSurface);
-
+	SDL_Texture* paddle_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
+	
 	// Set the paddle position
-	SDL_Rect paddlePosition = { player->getX() , player->getY(), PLAYER_WIDTH, PLAYER_HEIGHT};
+	SDL_Rect paddle_position = { player->getX() , player->getY(), PLAYER_WIDTH, PLAYER_HEIGHT};
 
 	// Draw the paddle
-	SDL_RenderCopy(renderer, paddleTexture, nullptr, &paddlePosition);
+	SDL_RenderCopy(renderer, paddle_texture, nullptr, &paddle_position);
+	SDL_DestroyTexture(paddle_texture);
+}
 
-	SDL_DestroyTexture(paddleTexture);
+void renderBall(Ball* ball, SDL_Renderer* renderer)
+{
+	//std::cout << "Rendering player at position: " << player->getX() << ", " << player->getY() << std::endl;
+
+	// Load the paddle image
+	SDL_Texture* ball_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
+
+	// Set the paddle position
+	SDL_Rect ball_position = { ball->getX() , ball->getY(), BALL_WIDTH, BALL_HEIGHT };
+
+	// Draw the paddle
+	SDL_RenderCopy(renderer, ball_texture, nullptr, &ball_position);
+	SDL_DestroyTexture(ball_texture);
 }
 
 int main ( int argc, char* args[])
@@ -95,7 +123,8 @@ int main ( int argc, char* args[])
 				}
 				else {
 					Player *player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
-					Player* player2 = new Player(SCREEN_WIDTH - PLAYER_WIDTH, (SCREEN_HEIGHT / 2) - 100);
+					Player *player2 = new Player(SCREEN_WIDTH - PLAYER_WIDTH, (SCREEN_HEIGHT / 2) - 100);
+					Ball* ball = new Ball((SCREEN_WIDTH / 2) - BALL_WIDTH, (SCREEN_HEIGHT / 2) - BALL_HEIGHT,  5, 0);
 
 					bool running = true;
 					while (running) 
@@ -152,29 +181,28 @@ int main ( int argc, char* args[])
 									break;
 							}
 						}
+
+						// Game updates
 						player1->updatePlayerPosition();
 						player2->updatePlayerPosition();
+						ball->updatePlayerPosition();
 
 
-						// Clear the screen
+						// Rendering
 						SDL_SetRenderDrawColor( renderer, 0x00, 0x00, 0x00, 0x00 );
 						SDL_RenderClear(renderer);
 
-						// Render paddles
 						renderPlayer(player1, renderer);
 						renderPlayer(player2, renderer);
+						renderBall(ball, renderer);
 
-
-
-						// Present the frame
 						SDL_RenderPresent(renderer);
-
 						SDL_Delay(10);
 					}
 
 					delete player1;
 					delete player2;
-
+					delete ball;
 				}
 
 			}
@@ -183,6 +211,7 @@ int main ( int argc, char* args[])
 
 		SDL_DestroyWindow(window);
 		SDL_DestroyRenderer(renderer);
+		SDL_FreeSurface(paddle_surface);
 		SDL_Quit();
 
 		return 0;

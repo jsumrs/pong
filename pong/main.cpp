@@ -4,10 +4,6 @@
 
 constexpr int SCREEN_WIDTH{ 640 };
 constexpr int SCREEN_HEIGHT{ 480 };
-constexpr int PLAYER_WIDTH{ 20 };
-constexpr int PLAYER_HEIGHT{ 100 };
-constexpr int BALL_WIDTH{ 20 };
-constexpr int BALL_HEIGHT{ BALL_WIDTH };
 
 SDL_Surface* paddle_surface{ SDL_LoadBMP("img/paddle.bmp") };
 SDL_Surface* ball_surface{ SDL_LoadBMP("img/ball.bmp") };
@@ -17,7 +13,9 @@ class Player
 {
 	// Player should be responsible for its own behaviours.
 	public:
-		const static int movespeed{ 10 }; // Movespeed
+		const static int movespeed = 10; // Movespeed
+		const static int PLAYER_WIDTH = 20;
+		const static int PLAYER_HEIGHT = 100;
 
 		Player() : x(0), y(0), x_vel(0), y_vel(0) {}
 		Player(int x, int y) : x(x), y(y), x_vel(0), y_vel(0) {}
@@ -49,6 +47,9 @@ class Player
 
 class Ball : public Player {
 	public: 
+		const static int BALL_HEIGHT = 20;
+		const static int BALL_WIDTH = BALL_HEIGHT;
+
 		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
 		void updatePlayerPosition() 
@@ -69,7 +70,7 @@ void renderPlayer (Player* player, SDL_Renderer* renderer)
 	SDL_Texture* paddle_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
 	
 	// Set the paddle position
-	SDL_Rect paddle_position = { player->getX() , player->getY(), PLAYER_WIDTH, PLAYER_HEIGHT};
+	SDL_Rect paddle_position = { player->getX() , player->getY(), Player::PLAYER_WIDTH, Player::PLAYER_HEIGHT};
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, paddle_texture, nullptr, &paddle_position);
@@ -79,16 +80,39 @@ void renderPlayer (Player* player, SDL_Renderer* renderer)
 void renderBall(Ball* ball, SDL_Renderer* renderer)
 {
 	//std::cout << "Rendering player at position: " << player->getX() << ", " << player->getY() << std::endl;
+	
+	// Setting the color key makes the black pixels transparent.
+	SDL_SetColorKey(ball_surface, SDL_TRUE, 0x00);
 
 	// Load the paddle image
-	SDL_Texture* ball_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
+	SDL_Texture* ball_texture = SDL_CreateTextureFromSurface(renderer, ball_surface);
 
 	// Set the paddle position
-	SDL_Rect ball_position = { ball->getX() , ball->getY(), BALL_WIDTH, BALL_HEIGHT };
+	SDL_Rect ball_position = { ball->getX() , ball->getY(), Ball::BALL_WIDTH, Ball::BALL_HEIGHT};
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, ball_texture, nullptr, &ball_position);
 	SDL_DestroyTexture(ball_texture);
+}
+
+
+// Returns the player that is colliding with the ball, null if no collision detected.
+Player* checkCollisions(Player* p1, Player* p2, Ball* b) 
+{
+	int p1x = p1->getX();
+	int p1y = p1->getY();
+	int p2x = p2->getX();
+	int p2y = p2->getY();
+	int bx = b->getX();
+	int by = b->getY();
+
+	// Check left of ball for collision against wall or paddle
+
+	// Check right of ball for collision against wall or paddle
+
+	// Check top of ball for collision against wall
+
+	// Check bottom of ball for collision against wall
 }
 
 int main ( int argc, char* args[])
@@ -123,8 +147,8 @@ int main ( int argc, char* args[])
 				}
 				else {
 					Player *player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
-					Player *player2 = new Player(SCREEN_WIDTH - PLAYER_WIDTH, (SCREEN_HEIGHT / 2) - 100);
-					Ball* ball = new Ball((SCREEN_WIDTH / 2) - BALL_WIDTH, (SCREEN_HEIGHT / 2) - BALL_HEIGHT,  5, 0);
+					Player *player2 = new Player(SCREEN_WIDTH - Player::PLAYER_WIDTH, (SCREEN_HEIGHT / 2) - 100);
+					Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::BALL_WIDTH, (SCREEN_HEIGHT / 2) - Ball:: BALL_HEIGHT, 5, 0);
 
 					bool running = true;
 					while (running) 

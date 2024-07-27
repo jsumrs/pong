@@ -237,7 +237,11 @@ int main ( int argc, char* args[])
 
 						// Game updates
 						player1->updatePlayerPosition();
+						
+						player2->setY_Vel(ball->getY_Vel());
 						player2->updatePlayerPosition();
+						
+						
 						ball->updatePlayerPosition();
 
 						checkCollisions(player1, player2, ball);

@@ -97,7 +97,7 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 
 
 // Returns the player that is colliding with the ball, null if no collision detected.
-Player* checkCollisions(Player* p1, Player* p2, Ball* b) 
+void checkCollisions(Player* p1, Player* p2, Ball* b) 
 {
 	// Player 1 Corners
 	int p1x = p1->getX();
@@ -138,12 +138,10 @@ Player* checkCollisions(Player* p1, Player* p2, Ball* b)
 	if (by <= 0) {
 		b->setY_Vel(-b->getY_Vel());
 	}
+	// Check bottom of ball for collision against wall
 	else if (by2 >= SCREEN_HEIGHT) {
 		b->setY_Vel(-b->getY_Vel());
 	}
-
-	// Check bottom of ball for collision against wall
-	return NULL;
 }
 
 int main ( int argc, char* args[])

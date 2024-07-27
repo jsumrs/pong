@@ -14,8 +14,8 @@ class Player
 	// Player should be responsible for its own behaviours.
 	public:
 		const static int movespeed = 10; // Movespeed
-		const static int PLAYER_WIDTH = 20;
-		const static int PLAYER_HEIGHT = 100;
+		const static int WIDTH = 20;
+		const static int HEIGHT = 100;
 
 		Player() : x(0), y(0), x_vel(0), y_vel(0) {}
 		Player(int x, int y) : x(x), y(y), x_vel(0), y_vel(0) {}
@@ -33,8 +33,8 @@ class Player
 
 	void updatePlayerPosition()
 	{
-		setX(std::clamp(x + x_vel, 0, SCREEN_WIDTH - PLAYER_WIDTH));
-		setY(std::clamp(y + y_vel, 0, SCREEN_HEIGHT - PLAYER_HEIGHT));
+		setX(std::clamp(x + x_vel, 0, SCREEN_WIDTH - WIDTH));
+		setY(std::clamp(y + y_vel, 0, SCREEN_HEIGHT - HEIGHT));
 	}
 
 	private:
@@ -47,15 +47,15 @@ class Player
 
 class Ball : public Player {
 	public: 
-		const static int BALL_HEIGHT = 20;
-		const static int BALL_WIDTH = BALL_HEIGHT;
+		const static int HEIGHT = 20;
+		const static int WIDTH = HEIGHT;
 
 		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
 		void updatePlayerPosition() 
 		{
-			setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - BALL_WIDTH));
-			setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - BALL_HEIGHT));
+			setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - WIDTH));
+			setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - HEIGHT));
 		}
 };
 
@@ -70,7 +70,7 @@ void renderPlayer (Player* player, SDL_Renderer* renderer)
 	SDL_Texture* paddle_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
 	
 	// Set the paddle position
-	SDL_Rect paddle_position = { player->getX() , player->getY(), Player::PLAYER_WIDTH, Player::PLAYER_HEIGHT};
+	SDL_Rect paddle_position = { player->getX() , player->getY(), Player::WIDTH, Player::HEIGHT};
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, paddle_texture, nullptr, &paddle_position);
@@ -88,7 +88,7 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 	SDL_Texture* ball_texture = SDL_CreateTextureFromSurface(renderer, ball_surface);
 
 	// Set the paddle position
-	SDL_Rect ball_position = { ball->getX() , ball->getY(), Ball::BALL_WIDTH, Ball::BALL_HEIGHT};
+	SDL_Rect ball_position = { ball->getX() , ball->getY(), Ball::WIDTH, Ball::HEIGHT};
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, ball_texture, nullptr, &ball_position);
@@ -99,20 +99,51 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 // Returns the player that is colliding with the ball, null if no collision detected.
 Player* checkCollisions(Player* p1, Player* p2, Ball* b) 
 {
+	// Player 1 Corners
 	int p1x = p1->getX();
+	int p1x2 = p1x + Player::WIDTH;
 	int p1y = p1->getY();
+	int p1y2 = p1y + Player::HEIGHT;
+
+	// Player 2 Corners
 	int p2x = p2->getX();
+	int p2x2 = p2x + Player::WIDTH;
 	int p2y = p2->getY();
+	int p2y2 = p2y + Player::HEIGHT;
+
+	// Ball Corners
 	int bx = b->getX();
+	int bx2 = bx + Ball::WIDTH;
 	int by = b->getY();
+	int by2 = by + Ball::HEIGHT;
 
 	// Check left of ball for collision against wall or paddle
-
+	if (bx <= p1x2 && by >= p1y && by <= p1y2) {
+		b->setX_Vel(-b->getX_Vel());
+	}
+	else if (bx <= 0) {
+		// Ball hit left wall
+		b->setX_Vel(-b->getX_Vel());
+	}
+	
 	// Check right of ball for collision against wall or paddle
-
+	if (bx2 >= p2x && by >= p2y && by <= p2y2) {
+		b->setX_Vel(-b->getX_Vel());
+	}
+	else if (bx2 >= SCREEN_WIDTH) {
+		// Ball hit left wall
+		b->setX_Vel(-b->getX_Vel());
+	}
 	// Check top of ball for collision against wall
+	if (by <= 0) {
+		b->setY_Vel(-b->getY_Vel());
+	}
+	else if (by2 >= SCREEN_HEIGHT) {
+		b->setY_Vel(-b->getY_Vel());
+	}
 
 	// Check bottom of ball for collision against wall
+	return NULL;
 }
 
 int main ( int argc, char* args[])
@@ -147,8 +178,8 @@ int main ( int argc, char* args[])
 				}
 				else {
 					Player *player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
-					Player *player2 = new Player(SCREEN_WIDTH - Player::PLAYER_WIDTH, (SCREEN_HEIGHT / 2) - 100);
-					Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::BALL_WIDTH, (SCREEN_HEIGHT / 2) - Ball:: BALL_HEIGHT, 5, 0);
+					Player *player2 = new Player(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
+					Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball:: HEIGHT, -5, 5);
 
 					bool running = true;
 					while (running) 
@@ -210,6 +241,8 @@ int main ( int argc, char* args[])
 						player1->updatePlayerPosition();
 						player2->updatePlayerPosition();
 						ball->updatePlayerPosition();
+
+						checkCollisions(player1, player2, ball);
 
 
 						// Rendering

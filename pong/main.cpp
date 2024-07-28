@@ -321,20 +321,17 @@ int main ( int argc, char* args[])
 						
 						switch (checkCollisionsAgainstWalls(ball))
 						{
-							case 'n':
-								// Ball collided with ceiling
+							case 'n': // Ceiling
 								ball->setY_Vel(-ball->getY_Vel());
 								break;
-							case 's':
+							case 's': // Floor
 								ball->setY_Vel(-ball->getY_Vel());
 								break;
-							case 'e':
-								// Ball collided with player 2's wall.
+							case 'e': // P2's Wall
 								ball->setX_Vel(-ball->getX_Vel());
 								player1->scorePoint();
 								break;
-							case 'w':
-								// Ball collided with player 1's wall.
+							case 'w': // P1's Wall
 								ball->setX_Vel(-ball->getX_Vel());
 								player2->scorePoint();
 								break;

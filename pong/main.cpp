@@ -60,7 +60,7 @@ class Ball : public Player {
 	public: 
 		const static int HEIGHT = 20;
 		const static int WIDTH = HEIGHT;
-
+		const static int RADIUS = WIDTH / 2;
 		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
 		void updatePlayerPosition() 
@@ -123,8 +123,37 @@ void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y
 	SDL_DestroyTexture(p_text_texture);
 }
 
+bool checkCollisionsAgainstPlayer(Player* player, Ball* ball)
+{
+	// Player axes
+	int player_x = player->getX();
+	int player_x2 = player_x + Player::WIDTH;
+	int player_y = player->getY();
+	int player_y2 = player_y + Player::HEIGHT;
+
+	// Ball axes  
+	int ball_x = ball->getX();
+	int ball_x2 = ball_x + Ball::WIDTH;
+	int ball_y = ball->getY();
+	int ball_y2 = ball_y + Ball::HEIGHT;
+    
+	bool collision_x = player_x2 >= ball_x && ball_x2 >= player_x;
+	bool collision_y = player_y2 >= ball_y && ball_y2 >= player_y;
+
+	return collision_x && collision_y;
+}
+
+
+bool checkCollisionsAgainstWallSides(Ball* ball) {
+	return ball->getX() <= 0 || ball->getX() + Ball::WIDTH >= SCREEN_WIDTH;
+}
+
+bool checkCollisionsAgainstWallCeilingAndRoof(Ball* ball) {
+	return ball->getY() <= 0 || ball->getY() + Ball::HEIGHT >= SCREEN_HEIGHT;
+}
+
 // Returns the player that is colliding with the ball, null if no collision detected.
-void checkCollisions(Player* p1, Player* p2, Ball* b) 
+void checkcheck(Player* p1, Player* p2, Ball* b) 
 {
 	// Player 1 Corners
 	int p1x = p1->getX();
@@ -164,7 +193,7 @@ void checkCollisions(Player* p1, Player* p2, Ball* b)
 		p1->scorePoint();
 	}
 	// Check top of ball for collision against wall
-	if (by <= 0) {
+	if (by <= 0 || (by >= p1y && by <= p1y2 && bx >= p1x && bx <= p1x2 )) {
 		b->setY_Vel(-b->getY_Vel());
 	}
 	// Check bottom of ball for collision against wall
@@ -178,6 +207,8 @@ int main ( int argc, char* args[])
 		SDL_Window* window { NULL };
 		SDL_Renderer* renderer { NULL };
 		SDL_Surface* screenSurface { NULL };
+
+		int game_speed = 10;
 
 		int SDL_Init_return_val{ SDL_Init(SDL_INIT_VIDEO) };
 		if ( SDL_Init_return_val < 0) 
@@ -250,6 +281,17 @@ int main ( int argc, char* args[])
 											break;
 										case SDLK_DOWN:
 											player2->setY_Vel(Player::MOVESPEED);
+											break;
+										case SDLK_PERIOD:
+											if (game_speed >= 1) {
+												game_speed -= 1;
+												std::cout << "Gamespeed: " << game_speed << std::endl;
+											}
+											break;
+										case SDLK_COMMA:
+											game_speed += 1;
+											std::cout << "Gamespeed: " << game_speed << std::endl;
+											break;
 										default:
 											break;
 									}
@@ -289,7 +331,26 @@ int main ( int argc, char* args[])
 						
 						ball->updatePlayerPosition();
 
-						checkCollisions(player1, player2, ball);
+
+						if (checkCollisionsAgainstPlayer(player1, ball)) {
+							ball->setX_Vel(-ball->getX_Vel());
+							//ball->setY_Vel(-ball->getY_Vel());
+						}
+
+						if (checkCollisionsAgainstPlayer(player2, ball)) {
+							ball->setX_Vel(-ball->getX_Vel());
+							//ball->setY_Vel(-ball->getY_Vel());
+						}
+
+						if (checkCollisionsAgainstWallSides(ball)) {
+							ball->setX_Vel(-ball->getX_Vel());
+						}
+						
+						if (checkCollisionsAgainstWallCeilingAndRoof(ball)) {
+							ball->setY_Vel(-ball->getY_Vel());
+						}
+
+						//checkcheck(player1, player2, ball);
 
 
 						// Rendering
@@ -303,7 +364,7 @@ int main ( int argc, char* args[])
 						renderScore(renderer, player2, font, 400, 200);
 
 						SDL_RenderPresent(renderer);
-						SDL_Delay(10);
+						SDL_Delay(game_speed);
 					}
 
 					delete player1;

@@ -1,21 +1,25 @@
 #include <SDL.h>
+#include <SDL_ttf.h>
 #include <iostream>
+#include <stdio.h>
 #include <algorithm>
+
 
 constexpr int SCREEN_WIDTH{ 640 };
 constexpr int SCREEN_HEIGHT{ 480 };
 
-SDL_Surface* paddle_surface{ SDL_LoadBMP("img/paddle.bmp") };
-SDL_Surface* ball_surface{ SDL_LoadBMP("img/ball.bmp") };
+SDL_Surface* paddle_surface{ SDL_LoadBMP("resources/paddle.bmp") };
+SDL_Surface* ball_surface{ SDL_LoadBMP("resources/ball.bmp") };
 
 
 class Player
 {
 	// Player should be responsible for its own behaviours.
 	public:
-		const static int movespeed = 10; // Movespeed
+		const static int MOVESPEED = 10; // Movespeed
 		const static int WIDTH = 20;
 		const static int HEIGHT = 100;
+		int score = 0;
 
 		Player() : x(0), y(0), x_vel(0), y_vel(0) {}
 		Player(int x, int y) : x(x), y(y), x_vel(0), y_vel(0) {}
@@ -31,10 +35,17 @@ class Player
 		void setX_Vel(int vel) { this->x_vel = vel; }
 		void setY_Vel(int vel) { this->y_vel = vel; }
 
+		int getScore() { return score; }
+
 	void updatePlayerPosition()
 	{
 		setX(std::clamp(x + x_vel, 0, SCREEN_WIDTH - WIDTH));
 		setY(std::clamp(y + y_vel, 0, SCREEN_HEIGHT - HEIGHT));
+	}
+
+	int scorePoint() {
+		score += 1;
+		return score;
 	}
 
 	private:
@@ -95,6 +106,22 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 	SDL_DestroyTexture(ball_texture);
 }
 
+void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y) {
+	SDL_Color font_color{ 255, 255, 255 };
+	
+	const int buffer_size = 4;
+	char p_score_buffer[buffer_size];
+	std::snprintf(p_score_buffer, buffer_size, "%d", p->getScore());
+	SDL_Surface* p_text_surface = TTF_RenderText_Solid(font, p_score_buffer, font_color);
+	
+	SDL_Texture* p_text_texture = SDL_CreateTextureFromSurface(renderer, p_text_surface);
+	SDL_FreeSurface(p_text_surface);
+
+	SDL_Rect p_text_rect = { x, y, p_text_surface->w, p_text_surface->h, };
+	SDL_RenderCopy(renderer, p_text_texture, nullptr, &p_text_rect);
+
+	SDL_DestroyTexture(p_text_texture);
+}
 
 // Returns the player that is colliding with the ball, null if no collision detected.
 void checkCollisions(Player* p1, Player* p2, Ball* b) 
@@ -124,6 +151,7 @@ void checkCollisions(Player* p1, Player* p2, Ball* b)
 	else if (bx <= 0) {
 		// Ball hit left wall
 		b->setX_Vel(-b->getX_Vel());
+		std::cout << "p2 scored, current score: " << p2->scorePoint();
 	}
 	
 	// Check right of ball for collision against wall or paddle
@@ -131,8 +159,9 @@ void checkCollisions(Player* p1, Player* p2, Ball* b)
 		b->setX_Vel(-b->getX_Vel());
 	}
 	else if (bx2 >= SCREEN_WIDTH) {
-		// Ball hit left wall
+		// Ball hit right wall
 		b->setX_Vel(-b->getX_Vel());
+		p1->scorePoint();
 	}
 	// Check top of ball for collision against wall
 	if (by <= 0) {
@@ -168,13 +197,28 @@ int main ( int argc, char* args[])
 			if (!window) 
 			{
 				std::cout << "Failed to create window: " << SDL_GetError();
+				return -1;
 			}
 			else {
 				renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
 				if (!renderer) {
 					std::cout << "Failed to create renderer: " << SDL_GetError();
+					return -1;
 				}
 				else {
+					// Init sdl font library
+					if (TTF_Init() == -1) {
+						std::cout << "Error loading font library: " << TTF_GetError();
+						return -1;
+					}
+					// Load our font.
+					TTF_Font* font = TTF_OpenFont("resources/NotoSansMono-Thin.ttf", 62);
+					if (font == nullptr) {
+						std::cout << "Error loading font: " << TTF_GetError();
+						return -1;
+					}
+
+
 					Player *player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
 					Player *player2 = new Player(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
 					Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball:: HEIGHT, -5, 5);
@@ -185,7 +229,8 @@ int main ( int argc, char* args[])
 						SDL_Event event;
 						while (SDL_PollEvent(&event)) 
 						{
-							std::cout << "Event detected: " << event.type;
+							//std::cout << "Event detected: " << event.type;
+
 							switch (event.type) 
 							{
 								case SDL_KEYDOWN:
@@ -195,16 +240,16 @@ int main ( int argc, char* args[])
 											running = false;
 											break;
 										case SDLK_w:
-											player1->setY_Vel(-Player::movespeed);
+											player1->setY_Vel(-Player::MOVESPEED);
 											break;
 										case SDLK_s:
-											player1->setY_Vel(Player::movespeed);
+											player1->setY_Vel(Player::MOVESPEED);
 											break;
 										case SDLK_UP:
-											player2->setY_Vel(-Player::movespeed);
+											player2->setY_Vel(-Player::MOVESPEED);
 											break;
 										case SDLK_DOWN:
-											player2->setY_Vel(Player::movespeed);
+											player2->setY_Vel(Player::MOVESPEED);
 										default:
 											break;
 									}
@@ -237,7 +282,7 @@ int main ( int argc, char* args[])
 
 						// Game updates
 						player1->updatePlayerPosition();
-						
+
 						player2->setY_Vel(ball->getY_Vel());
 						player2->updatePlayerPosition();
 						
@@ -254,6 +299,8 @@ int main ( int argc, char* args[])
 						renderPlayer(player1, renderer);
 						renderPlayer(player2, renderer);
 						renderBall(ball, renderer);
+						renderScore(renderer, player1, font, 200, 200);
+						renderScore(renderer, player2, font, 400, 200);
 
 						SDL_RenderPresent(renderer);
 						SDL_Delay(10);
@@ -262,6 +309,7 @@ int main ( int argc, char* args[])
 					delete player1;
 					delete player2;
 					delete ball;
+					delete font;
 				}
 
 			}

@@ -144,63 +144,42 @@ bool checkCollisionsAgainstPlayer(Player* player, Ball* ball)
 }
 
 
-bool checkCollisionsAgainstWallSides(Ball* ball) {
-	return ball->getX() <= 0 || ball->getX() + Ball::WIDTH >= SCREEN_WIDTH;
+bool checkCollisionsAgainstNorthWall(Ball* ball) {
+	return ball->getY() <= 0;
 }
 
-bool checkCollisionsAgainstWallCeilingAndRoof(Ball* ball) {
-	return ball->getY() <= 0 || ball->getY() + Ball::HEIGHT >= SCREEN_HEIGHT;
+bool checkCollisionsAgainstEastWall(Ball* ball) {
+	return ball->getX() + Ball::WIDTH >= SCREEN_WIDTH;
 }
 
-// Returns the player that is colliding with the ball, null if no collision detected.
-void checkcheck(Player* p1, Player* p2, Ball* b) 
-{
-	// Player 1 Corners
-	int p1x = p1->getX();
-	int p1x2 = p1x + Player::WIDTH;
-	int p1y = p1->getY();
-	int p1y2 = p1y + Player::HEIGHT;
+bool checkCollisionsAgainstSouthWall(Ball* ball) {
+	return ball->getY() + Ball::HEIGHT >= SCREEN_HEIGHT;
+}
 
-	// Player 2 Corners
-	int p2x = p2->getX();
-	int p2x2 = p2x + Player::WIDTH;
-	int p2y = p2->getY();
-	int p2y2 = p2y + Player::HEIGHT;
+bool checkCollisionsAgainstWestWall(Ball* ball) {
+	return ball->getX() <= 0;
+}
 
-	// Ball Corners
-	int bx = b->getX();
-	int bx2 = bx + Ball::WIDTH;
-	int by = b->getY();
-	int by2 = by + Ball::HEIGHT;
+char checkCollisionsAgainstWalls(Ball* ball) {
 
-	// Check left of ball for collision against wall or paddle
-	if (bx <= p1x2 && by >= p1y && by <= p1y2) {
-		b->setX_Vel(-b->getX_Vel());
+	if (checkCollisionsAgainstNorthWall(ball)) {
+		return 'n';
 	}
-	else if (bx <= 0) {
-		// Ball hit left wall
-		b->setX_Vel(-b->getX_Vel());
-		std::cout << "p2 scored, current score: " << p2->scorePoint();
+	else if (checkCollisionsAgainstEastWall(ball)) {
+		return 'e';
 	}
-	
-	// Check right of ball for collision against wall or paddle
-	if (bx2 >= p2x && by >= p2y && by <= p2y2) {
-		b->setX_Vel(-b->getX_Vel());
+	else if (checkCollisionsAgainstSouthWall(ball)) {
+		return 's';
 	}
-	else if (bx2 >= SCREEN_WIDTH) {
-		// Ball hit right wall
-		b->setX_Vel(-b->getX_Vel());
-		p1->scorePoint();
+	else if (checkCollisionsAgainstWestWall(ball)) {
+		return 'w';
 	}
-	// Check top of ball for collision against wall
-	if (by <= 0 || (by >= p1y && by <= p1y2 && bx >= p1x && bx <= p1x2 )) {
-		b->setY_Vel(-b->getY_Vel());
-	}
-	// Check bottom of ball for collision against wall
-	else if (by2 >= SCREEN_HEIGHT) {
-		b->setY_Vel(-b->getY_Vel());
+	else {
+		return '\0';
 	}
 }
+
+
 
 int main ( int argc, char* args[])
 {
@@ -334,23 +313,34 @@ int main ( int argc, char* args[])
 
 						if (checkCollisionsAgainstPlayer(player1, ball)) {
 							ball->setX_Vel(-ball->getX_Vel());
-							//ball->setY_Vel(-ball->getY_Vel());
 						}
 
 						if (checkCollisionsAgainstPlayer(player2, ball)) {
 							ball->setX_Vel(-ball->getX_Vel());
-							//ball->setY_Vel(-ball->getY_Vel());
-						}
-
-						if (checkCollisionsAgainstWallSides(ball)) {
-							ball->setX_Vel(-ball->getX_Vel());
 						}
 						
-						if (checkCollisionsAgainstWallCeilingAndRoof(ball)) {
-							ball->setY_Vel(-ball->getY_Vel());
+						switch (checkCollisionsAgainstWalls(ball))
+						{
+							case 'n':
+								// Ball collided with ceiling
+								ball->setY_Vel(-ball->getY_Vel());
+								break;
+							case 's':
+								ball->setY_Vel(-ball->getY_Vel());
+								break;
+							case 'e':
+								// Ball collided with player 2's wall.
+								ball->setX_Vel(-ball->getX_Vel());
+								player1->scorePoint();
+								break;
+							case 'w':
+								// Ball collided with player 1's wall.
+								ball->setX_Vel(-ball->getX_Vel());
+								player2->scorePoint();
+								break;
+							default:
+								break;
 						}
-
-						//checkcheck(player1, player2, ball);
 
 
 						// Rendering

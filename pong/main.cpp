@@ -208,7 +208,8 @@ int main(int argc, char* args[])
 	}
 	
 	SDL_GLContext glContext{ SDL_GL_CreateContext(window) };
-
+	
+	// Load our GL functions with GLAD.
 	if (!gladLoadGLLoader((GLADloadproc)SDL_GL_GetProcAddress))
 	{
 		std::cout << "Failed to load GLAD: " << SDL_GetError();

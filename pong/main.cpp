@@ -20,11 +20,17 @@ public:
 	const static int MOVESPEED = 10; // Movespeed
 	const static int WIDTH = 20;
 	const static int HEIGHT = 100;
+	const static SDL_KeyCode DEFAULT_UP_CONTROL = SDL_KeyCode::SDLK_w;
+	const static SDL_KeyCode DEFAULT_DOWN_CONTROL = SDL_KeyCode::SDLK_s;
+	const SDL_KeyCode up_control;
+	const SDL_KeyCode down_control;
 	int score = 0;
 
-	Player() : x(0), y(0), x_vel(0), y_vel(0) {}
-	Player(int x, int y) : x(x), y(y), x_vel(0), y_vel(0) {}
-	Player(int x, int y, int x_vel, int y_vel) : x(x), y(y), x_vel(x_vel), y_vel(y_vel) {}
+	Player(int x, int y, int x_vel, int y_vel, SDL_KeyCode up_control, SDL_KeyCode down_control) : x(x), y(y), x_vel(x_vel), y_vel(y_vel), up_control(up_control), down_control(down_control) {}
+	Player(int x, int y, int x_vel, int y_vel) : Player(x, y, x_vel, y_vel, DEFAULT_UP_CONTROL, DEFAULT_DOWN_CONTROL) {}
+	Player(int x, int y) : Player(x, y, 0, 0) {}
+	Player() : Player(0, 0) {}
+
 
 	int getX() { return x; }
 	int getY() { return y; }
@@ -38,7 +44,7 @@ public:
 
 	int getScore() { return score; }
 
-	void updatePlayerPosition()
+	void updatePosition()
 	{
 		setX(std::clamp(x + x_vel, 0, SCREEN_WIDTH - WIDTH));
 		setY(std::clamp(y + y_vel, 0, SCREEN_HEIGHT - HEIGHT));
@@ -64,7 +70,7 @@ public:
 	const static int RADIUS = WIDTH / 2;
 	Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
-	void updatePlayerPosition()
+	void updatePosition()
 	{
 		setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - WIDTH));
 		setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - HEIGHT));
@@ -144,6 +150,12 @@ bool checkCollisionsAgainstPlayer(Player* player, Ball* ball)
 	return collision_x && collision_y;
 }
 
+void handlePlayerBallCollisions(Ball* ball, Player* player) {
+	if (checkCollisionsAgainstPlayer(player , ball)) {
+		ball->setX_Vel(-ball->getX_Vel());
+	}
+}
+
 
 bool checkCollisionsAgainstNorthWall(Ball* ball) {
 	return ball->getY() <= 0;
@@ -178,6 +190,29 @@ char checkCollisionsAgainstWalls(Ball* ball) {
 	else {
 		return '\0';
 	}
+}
+
+void handleWallCollisions(Ball* ball, Player* player1, Player* player2) {
+	switch (checkCollisionsAgainstWalls(ball))
+		{
+		case 'n': // Ceiling
+			ball->setY_Vel(-ball->getY_Vel());
+			break;
+		case 's': // Floor
+			ball->setY_Vel(-ball->getY_Vel());
+			break;
+		case 'e': // P2's Wall
+			ball->setX_Vel(-ball->getX_Vel());
+			player1->scorePoint();
+			break;
+		case 'w': // P1's Wall
+			ball->setX_Vel(-ball->getX_Vel());
+			player2->scorePoint();
+			break;
+		default:
+			break;
+		}
+
 }
 
 
@@ -308,42 +343,17 @@ int main(int argc, char* args[])
 		}
 
 		// Game updates
-		player1->updatePlayerPosition();
+		player1->updatePosition();
 
 		player2->setY_Vel(ball->getY_Vel());
-		player2->updatePlayerPosition();
+		player2->updatePosition();
 
-
-		ball->updatePlayerPosition();
-
-
-		if (checkCollisionsAgainstPlayer(player1, ball)) {
-			ball->setX_Vel(-ball->getX_Vel());
-		}
-
-		if (checkCollisionsAgainstPlayer(player2, ball)) {
-			ball->setX_Vel(-ball->getX_Vel());
-		}
-
-		switch (checkCollisionsAgainstWalls(ball))
-		{
-		case 'n': // Ceiling
-			ball->setY_Vel(-ball->getY_Vel());
-			break;
-		case 's': // Floor
-			ball->setY_Vel(-ball->getY_Vel());
-			break;
-		case 'e': // P2's Wall
-			ball->setX_Vel(-ball->getX_Vel());
-			player1->scorePoint();
-			break;
-		case 'w': // P1's Wall
-			ball->setX_Vel(-ball->getX_Vel());
-			player2->scorePoint();
-			break;
-		default:
-			break;
-		}
+		ball->updatePosition();
+		
+		// Collisions
+		handlePlayerBallCollisions(ball, player1);
+		handlePlayerBallCollisions(ball, player2);
+		handleWallCollisions(ball, player1, player2);
 
 
 		// Rendering

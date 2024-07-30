@@ -115,7 +115,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>C:\Users\skipp\Arcarium\projects\pong\SDL2_ttf\include;C:\Users\skipp\Arcarium\projects\pong\SDL2\include;C:\Users\skipp\Arcarium\projects\pong\SDL2_image\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\skipp\Arcarium\projects\pong\glm;C:\Users\skipp\Arcarium\projects\pong\SDL2_ttf\include;C:\Users\skipp\Arcarium\projects\pong\SDL2\include;C:\Users\skipp\Arcarium\projects\pong\SDL2_image\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>

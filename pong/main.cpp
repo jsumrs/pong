@@ -70,9 +70,10 @@ private:
 class Ball : public Player 
 {
 	public:
-		const static int HEIGHT = 20;
-		const static int WIDTH = HEIGHT;
-		const static int RADIUS = WIDTH / 2;
+		constexpr static int HEIGHT = 20;
+		constexpr static int WIDTH = HEIGHT;
+		constexpr static float RADIUS = WIDTH / 2.0f;
+
 		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
 		void updatePosition()
@@ -136,33 +137,29 @@ void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y
 	SDL_DestroyTexture(p_text_texture);
 }
 
-bool checkCollisionsAgainstPlayer(Player* player, Ball* ball)
-{
-	// Player axes
-	int player_x = player->getX();
-	int player_x2 = player_x + Player::WIDTH;
-	int player_y = player->getY();
-	int player_y2 = player_y + Player::HEIGHT;
-
-	// Ball axes  
-	int ball_x = ball->getX();
-	int ball_x2 = ball_x + Ball::WIDTH;
-	int ball_y = ball->getY();
-	int ball_y2 = ball_y + Ball::HEIGHT;
-
-	bool collision_x = player_x2 >= ball_x && ball_x2 >= player_x;
-	bool collision_y = player_y2 >= ball_y && ball_y2 >= player_y;
-
-	return collision_x && collision_y;
-}
-
 bool checkCollisionAgainstPlayer(Player* player, Ball* ball)
 {
+	// https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
+
+	glm::vec2 ball_pos{ ball->getX(), ball->getY() };
+	glm::vec2 ball_center{ ball_pos + ball->RADIUS };
+
+	glm::vec2 player_half_extents { player->WIDTH / 2.0f, player->HEIGHT / 2.0f };
+	glm::vec2 player_center { player->getX() + player_half_extents.x, player->getY() + player_half_extents.y };
+
+	glm::vec2 difference = ball_center - player_center;
+	glm::vec2 clamped { glm::clamp(difference, -player_half_extents, player_half_extents) };
+	
+	// Closest point on player to the circle.
+	glm::vec2 closest = clamped + player_center;
+	difference = ball_center - closest;
+
+	return glm::length(difference) < ball->RADIUS;
 }
 
 void handlePlayerBallCollisions(Ball* ball, Player* player)
 {
-	if (checkCollisionsAgainstPlayer(player , ball)) {
+	if (checkCollisionAgainstPlayer(player , ball)) {
 		ball->setX_Vel(-ball->getX_Vel());
 	}
 }

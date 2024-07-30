@@ -5,6 +5,10 @@
 #include <stdio.h>
 #include <algorithm>
 
+// From GLM Lib
+#include <glm.hpp>
+#include <vec2.hpp>
+
 
 constexpr int SCREEN_WIDTH{ 640 };
 constexpr int SCREEN_HEIGHT{ 480 };
@@ -63,18 +67,19 @@ private:
 
 };
 
-class Ball : public Player {
-public:
-	const static int HEIGHT = 20;
-	const static int WIDTH = HEIGHT;
-	const static int RADIUS = WIDTH / 2;
-	Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
+class Ball : public Player 
+{
+	public:
+		const static int HEIGHT = 20;
+		const static int WIDTH = HEIGHT;
+		const static int RADIUS = WIDTH / 2;
+		Ball(int x, int y, int x_vel, int y_vel) : Player{ x, y, x_vel, y_vel } {}
 
-	void updatePosition()
-	{
-		setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - WIDTH));
-		setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - HEIGHT));
-	}
+		void updatePosition()
+		{
+			setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - WIDTH));
+			setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - HEIGHT));
+		}
 };
 
 
@@ -113,7 +118,8 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 	SDL_DestroyTexture(ball_texture);
 }
 
-void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y) {
+void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y) 
+{
 	SDL_Color font_color{ 255, 255, 255 };
 
 	const int buffer_size = 4;
@@ -150,30 +156,40 @@ bool checkCollisionsAgainstPlayer(Player* player, Ball* ball)
 	return collision_x && collision_y;
 }
 
-void handlePlayerBallCollisions(Ball* ball, Player* player) {
+bool checkCollisionAgainstPlayer(Player* player, Ball* ball)
+{
+}
+
+void handlePlayerBallCollisions(Ball* ball, Player* player)
+{
 	if (checkCollisionsAgainstPlayer(player , ball)) {
 		ball->setX_Vel(-ball->getX_Vel());
 	}
 }
 
 
-bool checkCollisionsAgainstNorthWall(Ball* ball) {
+bool checkCollisionsAgainstNorthWall(Ball* ball)
+{
 	return ball->getY() <= 0;
 }
 
-bool checkCollisionsAgainstEastWall(Ball* ball) {
+bool checkCollisionsAgainstEastWall(Ball* ball)
+{
 	return ball->getX() + Ball::WIDTH >= SCREEN_WIDTH;
 }
 
-bool checkCollisionsAgainstSouthWall(Ball* ball) {
+bool checkCollisionsAgainstSouthWall(Ball* ball) 
+{
 	return ball->getY() + Ball::HEIGHT >= SCREEN_HEIGHT;
 }
 
-bool checkCollisionsAgainstWestWall(Ball* ball) {
+bool checkCollisionsAgainstWestWall(Ball* ball)
+{
 	return ball->getX() <= 0;
 }
 
-char checkCollisionsAgainstWalls(Ball* ball) {
+char checkCollisionsAgainstWalls(Ball* ball) 
+{
 
 	if (checkCollisionsAgainstNorthWall(ball)) {
 		return 'n';
@@ -192,7 +208,8 @@ char checkCollisionsAgainstWalls(Ball* ball) {
 	}
 }
 
-void handleWallCollisions(Ball* ball, Player* player1, Player* player2) {
+void handleWallCollisions(Ball* ball, Player* player1, Player* player2) 
+{
 	switch (checkCollisionsAgainstWalls(ball))
 		{
 		case 'n': // Ceiling

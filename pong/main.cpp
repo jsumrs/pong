@@ -2,6 +2,7 @@
 #include <SDL.h>
 #include <SDL_ttf.h>
 #include <iostream>
+#include <random>
 #include <stdio.h>
 #include <algorithm>
 
@@ -85,8 +86,6 @@ class Ball : public Player
 
 void renderPlayer(Player& player, SDL_Renderer* renderer)
 {
-	//std::cout << "Rendering player at position: " << player.getX() << ", " << player.getY() << std::endl;
-
 	// Load the paddle image
 	SDL_Texture* paddle_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
 
@@ -158,6 +157,17 @@ bool checkCollisionAgainstPlayer(Player& player, Ball& ball)
 void handlePlayerBallCollisions(Ball& ball, Player& player)
 {
 	if (checkCollisionAgainstPlayer(player , ball)) {
+		const int displacement_v = 5;
+		if (ball.x_vel < 0) 
+		{ // ball is moving west.
+			ball.x = std::max(Player::WIDTH, ball.x + (-ball.x_vel));
+			ball.x += displacement_v;
+		}
+		else if (ball.x_vel > 0)
+		{ // ball is moving east.
+			ball.x = std::min(SCREEN_WIDTH - Player::WIDTH - Ball::WIDTH, ball.x + (-ball.x_vel));
+			ball.x -= displacement_v;
+		}
 		ball.setX_Vel(-ball.x_vel);
 	}
 
@@ -225,7 +235,15 @@ void handleWallCollisions(Ball& ball, Player& player1, Player& player2)
 		default:
 			break;
 		}
+}
 
+double randomNumber(double min, double max) {
+	// Credit: https://stackoverflow.com/a/7560564
+	std::random_device rd; // obtain a random number from hardware
+	std::mt19937 gen(rd()); // seed the generator
+	std::uniform_int_distribution<> distr(min, max); // define the range
+
+	return distr(gen);
 }
 
 
@@ -283,15 +301,21 @@ int main(int argc, char* args[])
 		return -1;
 	}
 
-	// TODO CHANGE THESE TO REFERENCES NOT POINTERS. WHEN DELETING THESE AND NOT MAKING THEM nullptr THEY ARE CONSIDERED "DANGLING" POINTERS
-	// WHICH MAY LEAD TO UNDEFINED BEHAVIOUR AND / OR CRASHES. REFERENCES ARE EASIER TO WORK WITH.
-
+	// Create our players.
 	Player p1(0, (SCREEN_HEIGHT / 2) - 100);
-	Player p2(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
-	Ball b((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball::HEIGHT, -5, 5);
 	Player& player1 = p1;
+
+	Player p2(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
 	Player& player2 = p2;
+ 
+
+
+	// Create our ball
+	// Generate a random starting direction
+	const int starting_direction = randomNumber(0, 1) == 0 ? 5 : -5;
+	Ball b((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball::HEIGHT, starting_direction, 5);
 	Ball& ball = b;
+
 	unsigned int game_speed = 10;
 	bool running = true;
 
@@ -363,17 +387,18 @@ int main(int argc, char* args[])
 		// Game updates
 		player1.updatePosition();
 
-		player2.setY_Vel(ball.y_vel);
+		//player2.setY_Vel(ball.y_vel);
 		player2.updatePosition();
 
 		ball.updatePosition();
 		
 		// Collisions
+		// BUG: Ball gets "stuck" inside paddle. Ball realizes its inside the paddle and reverses direction, then next frame it is still
+		// inside the paddle so it reverses direction again, doing this repeatedly till it is no longer inside the paddle.
+		// Possible solution: Teleport the ball out of the paddle when it detects it is inside.
 		handlePlayerBallCollisions(ball, player1);
 		handlePlayerBallCollisions(ball, player2);
 		handleWallCollisions(ball, player1, player2);
-
-		std::cout << "Ball pos: (" << ball.x << ',' << ball.y << ").\n";
 
 		// Rendering
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);

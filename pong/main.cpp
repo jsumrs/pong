@@ -11,8 +11,8 @@
 #include <vec2.hpp>
 
 
-constexpr int SCREEN_WIDTH{ 640 };
-constexpr int SCREEN_HEIGHT{ 480 };
+constexpr int SCREEN_WIDTH{ 1000 };
+constexpr int SCREEN_HEIGHT{ 600 };
 
 SDL_Surface* paddle_surface{ SDL_LoadBMP("resources/paddle.bmp") };
 SDL_Surface* ball_surface{ SDL_LoadBMP("resources/ball.bmp") };
@@ -83,6 +83,14 @@ class Ball : public Player
 
 
 
+double randomNumber(double min, double max) {
+	// Credit: https://stackoverflow.com/a/7560564
+	std::random_device rd; // obtain a random number from hardware
+	std::mt19937 gen(rd()); // seed the generator
+	std::uniform_int_distribution<> distr(min, max); // define the range
+
+	return distr(gen);
+}
 
 void renderPlayer(Player& player, SDL_Renderer* renderer)
 {
@@ -216,6 +224,10 @@ char checkCollisionsAgainstWalls(Ball& ball)
 
 void handleWallCollisions(Ball& ball, Player& player1, Player& player2) 
 {
+	const int screen_quotient = SCREEN_WIDTH / 5;
+	const int random_location_p1_side = randomNumber(screen_quotient, screen_quotient * 2);
+	const int random_location_p2_side = randomNumber(screen_quotient * 3, screen_quotient * 4);
+
 	switch (checkCollisionsAgainstWalls(ball))
 		{
 		case 'n': // Ceiling
@@ -225,26 +237,19 @@ void handleWallCollisions(Ball& ball, Player& player1, Player& player2)
 			ball.setY_Vel(-(ball.y_vel));
 			break;
 		case 'e': // P2's Wall
-			ball.setX_Vel(-ball.x_vel);
 			player1.scorePoint();
+			ball.x = random_location_p1_side;
 			break;
 		case 'w': // P1's Wall
-			ball.setX_Vel(-ball.x_vel);
 			player2.scorePoint();
+			ball.x = random_location_p2_side;
 			break;
 		default:
 			break;
 		}
 }
 
-double randomNumber(double min, double max) {
-	// Credit: https://stackoverflow.com/a/7560564
-	std::random_device rd; // obtain a random number from hardware
-	std::mt19937 gen(rd()); // seed the generator
-	std::uniform_int_distribution<> distr(min, max); // define the range
 
-	return distr(gen);
-}
 
 
 
@@ -407,8 +412,9 @@ int main(int argc, char* args[])
 		renderPlayer(player1, renderer);
 		renderPlayer(player2, renderer);
 		renderBall(ball, renderer);
-		renderScore(renderer, player1, font, 200, 200);
-		renderScore(renderer, player2, font, 400, 200);
+		renderScore(renderer, player1, font, SCREEN_WIDTH / 4, SCREEN_HEIGHT / 4);
+		renderScore(renderer, player2, font, (SCREEN_WIDTH / 4) * 3, SCREEN_HEIGHT / 4);
+
 
 		SDL_RenderPresent(renderer);
 		SDL_Delay(game_speed);

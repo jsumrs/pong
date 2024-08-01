@@ -398,9 +398,6 @@ int main(int argc, char* args[])
 		ball.updatePosition();
 		
 		// Collisions
-		// BUG: Ball gets "stuck" inside paddle. Ball realizes its inside the paddle and reverses direction, then next frame it is still
-		// inside the paddle so it reverses direction again, doing this repeatedly till it is no longer inside the paddle.
-		// Possible solution: Teleport the ball out of the paddle when it detects it is inside.
 		handlePlayerBallCollisions(ball, player1);
 		handlePlayerBallCollisions(ball, player2);
 		handleWallCollisions(ball, player1, player2);

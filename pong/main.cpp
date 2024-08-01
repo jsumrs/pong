@@ -158,7 +158,7 @@ bool checkCollisionAgainstPlayer(Player& player, Ball& ball)
 void handlePlayerBallCollisions(Ball& ball, Player& player)
 {
 	if (checkCollisionAgainstPlayer(player , ball)) {
-		ball.setX_Vel(-ball.x);
+		ball.setX_Vel(-ball.x_vel);
 	}
 
 }
@@ -209,17 +209,17 @@ void handleWallCollisions(Ball& ball, Player& player1, Player& player2)
 	switch (checkCollisionsAgainstWalls(ball))
 		{
 		case 'n': // Ceiling
-			ball.setY_Vel(-ball.y);
+			ball.setY_Vel(-ball.y_vel);
 			break;
 		case 's': // Floor
-			ball.setY_Vel(-ball.y);
+			ball.setY_Vel(-(ball.y_vel));
 			break;
 		case 'e': // P2's Wall
-			ball.setX_Vel(-ball.x);
+			ball.setX_Vel(-ball.x_vel);
 			player1.scorePoint();
 			break;
 		case 'w': // P1's Wall
-			ball.setX_Vel(-ball.x);
+			ball.setX_Vel(-ball.x_vel);
 			player2.scorePoint();
 			break;
 		default:
@@ -363,7 +363,7 @@ int main(int argc, char* args[])
 		// Game updates
 		player1.updatePosition();
 
-		player2.setY_Vel(ball.getY_Vel());
+		player2.setY_Vel(ball.y_vel);
 		player2.updatePosition();
 
 		ball.updatePosition();
@@ -373,6 +373,7 @@ int main(int argc, char* args[])
 		handlePlayerBallCollisions(ball, player2);
 		handleWallCollisions(ball, player1, player2);
 
+		std::cout << "Ball pos: (" << ball.x << ',' << ball.y << ").\n";
 
 		// Rendering
 		SDL_SetRenderDrawColor(renderer, 0x00, 0x00, 0x00, 0x00);

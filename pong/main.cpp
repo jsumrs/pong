@@ -29,8 +29,12 @@ public:
 	const SDL_KeyCode up_control;
 	const SDL_KeyCode down_control;
 	int score = 0;
+	int x;
+	int y;
+	int x_vel;
+	int y_vel;
 
-	Player(int x, int y, int x_vel, int y_vel, SDL_KeyCode up_control, SDL_KeyCode down_control) : x(x), y(y), x_vel(x_vel), y_vel(y_vel), up_control(up_control), down_control(down_control) {}
+	Player(int x, int y, int x_vel, int y_vel, const SDL_KeyCode up_control, const SDL_KeyCode down_control) : x(x), y(y), x_vel(x_vel), y_vel(y_vel), up_control(up_control), down_control(down_control) {}
 	Player(int x, int y, int x_vel, int y_vel) : Player(x, y, x_vel, y_vel, DEFAULT_UP_CONTROL, DEFAULT_DOWN_CONTROL) {}
 	Player(int x, int y) : Player(x, y, 0, 0) {}
 	Player() : Player(0, 0) {}
@@ -38,13 +42,13 @@ public:
 
 	int getX() { return x; }
 	int getY() { return y; }
-	void setX(int x) { this->x = x; }
-	void setY(int y) { this->y = y; }
+	void setX(int x2) { x = x2; }
+	void setY(int y2) { y = y2; }
 
 	int getX_Vel() { return x_vel; }
 	int getY_Vel() { return y_vel; }
-	void setX_Vel(int vel) { this->x_vel = vel; }
-	void setY_Vel(int vel) { this->y_vel = vel; }
+	void setX_Vel(int vel) { x_vel = vel; }
+	void setY_Vel(int vel) { y_vel = vel; }
 
 	int getScore() { return score; }
 
@@ -58,12 +62,6 @@ public:
 		score += 1;
 		return score;
 	}
-
-private:
-	int x;
-	int y;
-	int x_vel;
-	int y_vel;
 };
 
 class Ball : public Player 
@@ -77,32 +75,32 @@ class Ball : public Player
 
 		void updatePosition()
 		{
-			setX(std::clamp(this->getX() + this->getX_Vel(), 0, SCREEN_WIDTH - WIDTH));
-			setY(std::clamp(this->getY() + this->getY_Vel(), 0, SCREEN_HEIGHT - HEIGHT));
+			setX(std::clamp(x + x_vel, 0, SCREEN_WIDTH - WIDTH));
+			setY(std::clamp(y + y_vel, 0, SCREEN_HEIGHT - HEIGHT));
 		}
 };
 
 
 
 
-void renderPlayer(Player* player, SDL_Renderer* renderer)
+void renderPlayer(Player& player, SDL_Renderer* renderer)
 {
-	//std::cout << "Rendering player at position: " << player->getX() << ", " << player->getY() << std::endl;
+	//std::cout << "Rendering player at position: " << player.getX() << ", " << player.getY() << std::endl;
 
 	// Load the paddle image
 	SDL_Texture* paddle_texture = SDL_CreateTextureFromSurface(renderer, paddle_surface);
 
 	// Set the paddle position
-	SDL_Rect paddle_position = { player->getX() , player->getY(), Player::WIDTH, Player::HEIGHT };
+	SDL_Rect paddle_position = { player.x , player.y, Player::WIDTH, Player::HEIGHT };
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, paddle_texture, nullptr, &paddle_position);
 	SDL_DestroyTexture(paddle_texture);
 }
 
-void renderBall(Ball* ball, SDL_Renderer* renderer)
+void renderBall(Ball& ball, SDL_Renderer* renderer)
 {
-	//std::cout << "Rendering player at position: " << player->getX() << ", " << player->getY() << std::endl;
+	//std::cout << "Rendering player at position: " << player.getX() << ", " << player.getY() << std::endl;
 
 	// Setting the color key makes the black pixels transparent.
 	SDL_SetColorKey(ball_surface, SDL_TRUE, 0x00);
@@ -111,21 +109,21 @@ void renderBall(Ball* ball, SDL_Renderer* renderer)
 	SDL_Texture* ball_texture = SDL_CreateTextureFromSurface(renderer, ball_surface);
 
 	// Set the paddle position
-	SDL_Rect ball_position = { ball->getX() , ball->getY(), Ball::WIDTH, Ball::HEIGHT };
+	SDL_Rect ball_position = { ball.x , ball.y, Ball::WIDTH, Ball::HEIGHT };
 
 	// Draw the paddle
 	SDL_RenderCopy(renderer, ball_texture, nullptr, &ball_position);
 	SDL_DestroyTexture(ball_texture);
 }
 
-void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y) 
+void renderScore(SDL_Renderer* renderer, Player& p, TTF_Font* font, int x, int y) 
 {
 	SDL_Color font_color{ 255, 255, 255 };
 
 	// Convert score into a c-style string.
 	const int buffer_size = 4;
 	char p_score_buffer[buffer_size];
-	std::snprintf(p_score_buffer, buffer_size, "%d", p->getScore());
+	std::snprintf(p_score_buffer, buffer_size, "%d", p.score);
 
 	SDL_Surface* p_text_surface = TTF_RenderText_Solid(font, p_score_buffer, font_color);
 	SDL_Texture* p_text_texture = SDL_CreateTextureFromSurface(renderer, p_text_surface);
@@ -137,15 +135,15 @@ void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y
 	SDL_DestroyTexture(p_text_texture);
 }
 
-bool checkCollisionAgainstPlayer(Player* player, Ball* ball)
+bool checkCollisionAgainstPlayer(Player& player, Ball& ball)
 {
 	// https://learnopengl.com/In-Practice/2D-Game/Collisions/Collision-detection
 
-	glm::vec2 ball_pos{ ball->getX(), ball->getY() };
-	glm::vec2 ball_center{ ball_pos + ball->RADIUS };
+	glm::vec2 ball_pos{ ball.x, ball.y };
+	glm::vec2 ball_center{ ball_pos + Ball::RADIUS };
 
-	glm::vec2 player_half_extents { player->WIDTH / 2.0f, player->HEIGHT / 2.0f };
-	glm::vec2 player_center { player->getX() + player_half_extents.x, player->getY() + player_half_extents.y };
+	glm::vec2 player_half_extents { Player::WIDTH / 2.0f, Player::HEIGHT / 2.0f };
+	glm::vec2 player_center { player.x + player_half_extents.x, player.y + player_half_extents.y };
 
 	glm::vec2 difference = ball_center - player_center;
 	glm::vec2 clamped { glm::clamp(difference, -player_half_extents, player_half_extents) };
@@ -154,39 +152,39 @@ bool checkCollisionAgainstPlayer(Player* player, Ball* ball)
 	glm::vec2 closest = clamped + player_center;
 	difference = ball_center - closest;
 
-	return glm::length(difference) < ball->RADIUS;
+	return glm::length(difference) < Ball::RADIUS;
 }
 
-void handlePlayerBallCollisions(Ball* ball, Player* player)
+void handlePlayerBallCollisions(Ball& ball, Player& player)
 {
 	if (checkCollisionAgainstPlayer(player , ball)) {
-		ball->setX_Vel(-ball->getX_Vel());
+		ball.setX_Vel(-ball.x);
 	}
 
 }
 
 
-bool checkCollisionsAgainstNorthWall(Ball* ball)
+bool checkCollisionsAgainstNorthWall(Ball& ball)
 {
-	return ball->getY() <= 0;
+	return ball.y <= 0;
 }
 
-bool checkCollisionsAgainstEastWall(Ball* ball)
+bool checkCollisionsAgainstEastWall(Ball& ball)
 {
-	return ball->getX() + Ball::WIDTH >= SCREEN_WIDTH;
+	return ball.x + Ball::WIDTH >= SCREEN_WIDTH;
 }
 
-bool checkCollisionsAgainstSouthWall(Ball* ball) 
+bool checkCollisionsAgainstSouthWall(Ball& ball) 
 {
-	return ball->getY() + Ball::HEIGHT >= SCREEN_HEIGHT;
+	return ball.y + Ball::HEIGHT >= SCREEN_HEIGHT;
 }
 
-bool checkCollisionsAgainstWestWall(Ball* ball)
+bool checkCollisionsAgainstWestWall(Ball& ball)
 {
-	return ball->getX() <= 0;
+	return ball.x <= 0;
 }
 
-char checkCollisionsAgainstWalls(Ball* ball) 
+char checkCollisionsAgainstWalls(Ball& ball) 
 {
 
 	if (checkCollisionsAgainstNorthWall(ball)) {
@@ -206,23 +204,23 @@ char checkCollisionsAgainstWalls(Ball* ball)
 	}
 }
 
-void handleWallCollisions(Ball* ball, Player* player1, Player* player2) 
+void handleWallCollisions(Ball& ball, Player& player1, Player& player2) 
 {
 	switch (checkCollisionsAgainstWalls(ball))
 		{
 		case 'n': // Ceiling
-			ball->setY_Vel(-ball->getY_Vel());
+			ball.setY_Vel(-ball.y);
 			break;
 		case 's': // Floor
-			ball->setY_Vel(-ball->getY_Vel());
+			ball.setY_Vel(-ball.y);
 			break;
 		case 'e': // P2's Wall
-			ball->setX_Vel(-ball->getX_Vel());
-			player1->scorePoint();
+			ball.setX_Vel(-ball.x);
+			player1.scorePoint();
 			break;
 		case 'w': // P1's Wall
-			ball->setX_Vel(-ball->getX_Vel());
-			player2->scorePoint();
+			ball.setX_Vel(-ball.x);
+			player2.scorePoint();
 			break;
 		default:
 			break;
@@ -287,9 +285,13 @@ int main(int argc, char* args[])
 
 	// TODO CHANGE THESE TO REFERENCES NOT POINTERS. WHEN DELETING THESE AND NOT MAKING THEM nullptr THEY ARE CONSIDERED "DANGLING" POINTERS
 	// WHICH MAY LEAD TO UNDEFINED BEHAVIOUR AND / OR CRASHES. REFERENCES ARE EASIER TO WORK WITH.
-	Player* player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
-	Player* player2 = new Player(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
-	Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball::HEIGHT, -5, 5);
+
+	Player p1(0, (SCREEN_HEIGHT / 2) - 100);
+	Player p2(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
+	Ball b((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball::HEIGHT, -5, 5);
+	Player& player1 = p1;
+	Player& player2 = p2;
+	Ball& ball = b;
 	unsigned int game_speed = 10;
 	bool running = true;
 
@@ -307,16 +309,16 @@ int main(int argc, char* args[])
 							running = false;
 							break;
 						case SDLK_w:
-							player1->setY_Vel(-Player::MOVESPEED);
+							player1.setY_Vel(-Player::MOVESPEED);
 							break;
 						case SDLK_s:
-							player1->setY_Vel(Player::MOVESPEED);
+							player1.setY_Vel(Player::MOVESPEED);
 							break;
 						case SDLK_UP:
-							player2->setY_Vel(-Player::MOVESPEED);
+							player2.setY_Vel(-Player::MOVESPEED);
 							break;
 						case SDLK_DOWN:
-							player2->setY_Vel(Player::MOVESPEED);
+							player2.setY_Vel(Player::MOVESPEED);
 							break;
 						case SDLK_PERIOD:
 							if (game_speed >= 1) {
@@ -338,16 +340,16 @@ int main(int argc, char* args[])
 					{
 						// Check if the other key is pressed before setting the velocity to 0.
 						case SDLK_w:
-							if (player1->getY_Vel() < 0) player1->setY_Vel(0);
+							if (player1.getY_Vel() < 0) player1.setY_Vel(0);
 							break;
 						case SDLK_s:
-							if (player1->getY_Vel() > 0) player1->setY_Vel(0);
+							if (player1.getY_Vel() > 0) player1.setY_Vel(0);
 							break;
 						case SDLK_UP:
-							if (player2->getY_Vel() < 0) player2->setY_Vel(0);
+							if (player2.getY_Vel() < 0) player2.setY_Vel(0);
 							break;
 						case SDLK_DOWN:
-							if (player2->getY_Vel() > 0) player2->setY_Vel(0);
+							if (player2.getY_Vel() > 0) player2.setY_Vel(0);
 							break;
 						default:
 							break;
@@ -359,12 +361,12 @@ int main(int argc, char* args[])
 		}
 
 		// Game updates
-		player1->updatePosition();
+		player1.updatePosition();
 
-		player2->setY_Vel(ball->getY_Vel());
-		player2->updatePosition();
+		player2.setY_Vel(ball.getY_Vel());
+		player2.updatePosition();
 
-		ball->updatePosition();
+		ball.updatePosition();
 		
 		// Collisions
 		handlePlayerBallCollisions(ball, player1);
@@ -386,9 +388,7 @@ int main(int argc, char* args[])
 		SDL_Delay(game_speed);
 	}
 
-	delete player1;
-	delete player2;
-	delete ball;
+
 	TTF_CloseFont(font);
 
 

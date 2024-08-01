@@ -64,7 +64,6 @@ private:
 	int y;
 	int x_vel;
 	int y_vel;
-
 };
 
 class Ball : public Player 
@@ -123,11 +122,12 @@ void renderScore(SDL_Renderer* renderer, Player* p, TTF_Font* font, int x, int y
 {
 	SDL_Color font_color{ 255, 255, 255 };
 
+	// Convert score into a c-style string.
 	const int buffer_size = 4;
 	char p_score_buffer[buffer_size];
 	std::snprintf(p_score_buffer, buffer_size, "%d", p->getScore());
-	SDL_Surface* p_text_surface = TTF_RenderText_Solid(font, p_score_buffer, font_color);
 
+	SDL_Surface* p_text_surface = TTF_RenderText_Solid(font, p_score_buffer, font_color);
 	SDL_Texture* p_text_texture = SDL_CreateTextureFromSurface(renderer, p_text_surface);
 	SDL_FreeSurface(p_text_surface);
 
@@ -162,6 +162,7 @@ void handlePlayerBallCollisions(Ball* ball, Player* player)
 	if (checkCollisionAgainstPlayer(player , ball)) {
 		ball->setX_Vel(-ball->getX_Vel());
 	}
+
 }
 
 
@@ -284,7 +285,8 @@ int main(int argc, char* args[])
 		return -1;
 	}
 
-
+	// TODO CHANGE THESE TO REFERENCES NOT POINTERS. WHEN DELETING THESE AND NOT MAKING THEM nullptr THEY ARE CONSIDERED "DANGLING" POINTERS
+	// WHICH MAY LEAD TO UNDEFINED BEHAVIOUR AND / OR CRASHES. REFERENCES ARE EASIER TO WORK WITH.
 	Player* player1 = new Player(0, (SCREEN_HEIGHT / 2) - 100);
 	Player* player2 = new Player(SCREEN_WIDTH - Player::WIDTH, (SCREEN_HEIGHT / 2) - 100);
 	Ball* ball = new Ball((SCREEN_WIDTH / 2) - Ball::WIDTH, (SCREEN_HEIGHT / 2) - Ball::HEIGHT, -5, 5);
@@ -318,12 +320,12 @@ int main(int argc, char* args[])
 							break;
 						case SDLK_PERIOD:
 							if (game_speed >= 1) {
-								game_speed -= 1;
+								game_speed--;
 								std::cout << "Gamespeed: " << game_speed << std::endl;
 							}
 							break;
 						case SDLK_COMMA:
-							game_speed += 1;
+							game_speed++;
 							std::cout << "Gamespeed: " << game_speed << std::endl;
 							break;
 						default:
@@ -388,10 +390,6 @@ int main(int argc, char* args[])
 	delete player2;
 	delete ball;
 	TTF_CloseFont(font);
-
-
-
-
 
 
 	SDL_DestroyWindow(window);

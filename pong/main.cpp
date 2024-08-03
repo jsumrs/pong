@@ -1,14 +1,33 @@
 #include <glad/glad.h>
+
+// Graphics
 #include <SDL.h>
 #include <SDL_ttf.h>
-#include <iostream>
-#include <random>
-#include <stdio.h>
-#include <algorithm>
 
 // From GLM Lib
 #include <glm.hpp>
 #include <vec2.hpp>
+
+// Audio
+
+#include <soloud.h>
+#include <soloud_wav.h>
+
+
+// Std Lib
+#include <algorithm>
+#include <iostream>
+#include <random>
+#include <stdio.h>
+
+// Undefine macros that might conflict with min and max
+#ifdef min
+#undef min
+#endif
+
+#ifdef max
+#undef max
+#endif
 
 
 constexpr int SCREEN_WIDTH{ 1000 };
@@ -16,6 +35,11 @@ constexpr int SCREEN_HEIGHT{ 600 };
 
 SDL_Surface* paddle_surface{ SDL_LoadBMP("resources/paddle.bmp") };
 SDL_Surface* ball_surface{ SDL_LoadBMP("resources/ball.bmp") };
+
+SoLoud::Soloud engineSoloud; // SoLoud Engine
+SoLoud::Wav gWav_paddle;
+SoLoud::Wav gWav_wall;
+SoLoud::Wav gWav_score;
 
 
 class Player
@@ -165,9 +189,11 @@ bool checkCollisionAgainstPlayer(Player& player, Ball& ball)
 void handlePlayerBallCollisions(Ball& ball, Player& player)
 {
 	if (checkCollisionAgainstPlayer(player , ball)) {
+		engineSoloud.play(gWav_paddle);
 		const int displacement_v = 5;
 		if (ball.x_vel < 0) 
 		{ // ball is moving west.
+
 			ball.x = std::max(Player::WIDTH, ball.x + (-ball.x_vel));
 			ball.x += displacement_v;
 		}
@@ -292,6 +318,10 @@ int main(int argc, char* args[])
 		std::cout << "Failed to create renderer: " << SDL_GetError();
 		return -1;
 	}
+
+	// Initialize audio
+	engineSoloud.init();
+	gWav_paddle.load("resources/paddle.wav");
 		
 	// Init sdl font library
 	if (TTF_Init() == -1) {
@@ -425,6 +455,8 @@ int main(int argc, char* args[])
 	SDL_DestroyRenderer(renderer);
 	SDL_FreeSurface(paddle_surface);
 	SDL_Quit();
+
+	engineSoloud.deinit();
 
 	return 0;
 }

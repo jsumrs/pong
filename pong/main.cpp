@@ -85,6 +85,7 @@ public:
 
 	int scorePoint() {
 		score += 1;
+		engineSoloud.play(gWav_score);
 		return score;
 	}
 };
@@ -258,9 +259,11 @@ void handleWallCollisions(Ball& ball, Player& player1, Player& player2)
 		{
 		case 'n': // Ceiling
 			ball.setY_Vel(-ball.y_vel);
+			engineSoloud.play(gWav_wall);
 			break;
 		case 's': // Floor
 			ball.setY_Vel(-(ball.y_vel));
+			engineSoloud.play(gWav_wall);
 			break;
 		case 'e': // P2's Wall
 			player1.scorePoint();
@@ -322,7 +325,9 @@ int main(int argc, char* args[])
 	// Initialize audio
 	engineSoloud.init();
 	gWav_paddle.load("resources/paddle.wav");
-		
+	gWav_wall.load("resources/wall.wav");
+	gWav_score.load("resources/score.wav");
+
 	// Init sdl font library
 	if (TTF_Init() == -1) {
 		std::cout << "Error loading font library: " << TTF_GetError();

@@ -55,6 +55,11 @@
     <ClInclude Include="..\soloud\src\audiosource\wav\dr_wav.h" />
     <ClInclude Include="..\soloud\src\audiosource\wav\stb_vorbis.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\dll%27s\SDL2.dll" />
+    <None Include="..\dll%27s\SDL2_image.dll" />
+    <None Include="..\dll%27s\SDL2_ttf.dll" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>17.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>

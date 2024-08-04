@@ -113,4 +113,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="..\dll%27s\SDL2.dll">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\dll%27s\SDL2_image.dll">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="..\dll%27s\SDL2_ttf.dll">
+      <Filter>Source Files</Filter>
+    </None>
+  </ItemGroup>
 </Project>

@@ -1,3 +1,2 @@
 # Pong
-Its pong created with the sdl library, not much else to say.
-The code here probably sucks, I'm just focusing on getting something working.
+Built using SDL for the window and sprite rendering. Audio is handled by the SoLoud library with the SDL2 static backend. I'm using an OpenGl window to render the sprites which requires loading of the individual functions you want to use from the library. This task can be quite tedious so people have created tools to automate it such as [GLAD](https://glad.dav1d.de/), which I used in this project.
